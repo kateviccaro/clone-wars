@@ -102,40 +102,41 @@
     ctx.strokeStyle = '#493b4a';
     ctx.lineWidth = 2.5;
 
-    // White seagull body and head.
+    // Compact white seagull body and head. All local geometry stays within
+    // the bird box even when the bird tilts during a climb or fall.
     ctx.fillStyle = '#fff8ed';
     ctx.beginPath();
-    ctx.ellipse(0, 1, 14, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(-1, 1, 10.5, 8.5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(9, -7, 7.5, 0, Math.PI * 2);
+    ctx.arc(7, -6, 6.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
     // Folded wing, with a soft gray underside.
     ctx.fillStyle = '#b8cbd0';
     ctx.beginPath();
-    ctx.moveTo(-10, -1);
-    ctx.quadraticCurveTo(-1, -12, 10, -4);
-    ctx.quadraticCurveTo(2, 2, -8, 5);
+    ctx.moveTo(-9, 0);
+    ctx.quadraticCurveTo(-1, -10, 8, -4);
+    ctx.quadraticCurveTo(2, 2, -7, 5);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#e4a548';
     ctx.beginPath();
-    ctx.moveTo(15, -6);
-    ctx.lineTo(23, -3);
-    ctx.lineTo(15, -1);
+    ctx.moveTo(12, -6);
+    ctx.lineTo(14.5, -4);
+    ctx.lineTo(12, -2);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#493b4a';
     ctx.beginPath();
-    ctx.arc(11, -9, 1.5, 0, Math.PI * 2);
+    ctx.arc(8.5, -7.5, 1.25, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -155,32 +156,40 @@
       ctx.fillRect(x, y, pipeWidth, rectHeight);
       ctx.strokeRect(x + 1.5, y + 1.5, Math.max(0, pipeWidth - 3), Math.max(0, rectHeight - 3));
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x + 3, y + 3, Math.max(0, pipeWidth - 6), Math.max(0, rectHeight - 6));
-      ctx.clip();
-      ctx.fillStyle = light;
-      for (let stripeY = y + (topCap ? 12 : 8); stripeY < y + rectHeight; stripeY += 22) {
-        ctx.fillRect(x + pipeWidth * 0.18, stripeY, pipeWidth * 0.64, 5);
-      }
-      ctx.restore();
-
-      // Fronds stay within the obstacle rectangle and point toward the gap.
+      // The crown is a clear fan of palm fronds, clipped to the obstacle so
+      // it never changes the collision rectangle or reaches into the gap.
       const crownY = topCap ? y + rectHeight - 2 : y + 2;
       const direction = topCap ? 1 : -1;
+      const crownHeight = Math.min(26, Math.max(8, rectHeight - 4));
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + 2, y + 2, Math.max(0, pipeWidth - 4), Math.max(0, rectHeight - 4));
+      ctx.clip();
+      ctx.fillStyle = light;
+      ctx.fillRect(x + pipeWidth * 0.2, topCap ? y + 8 : y + rectHeight - 18, pipeWidth * 0.6, Math.max(0, rectHeight - 18));
+
       ctx.fillStyle = sand;
       ctx.strokeStyle = outline;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(x + pipeWidth * 0.5, crownY);
-      ctx.lineTo(x + pipeWidth * 0.12, crownY - direction * 10);
-      ctx.lineTo(x + pipeWidth * 0.35, crownY - direction * 5);
-      ctx.lineTo(x + pipeWidth * 0.5, crownY - direction * 15);
-      ctx.lineTo(x + pipeWidth * 0.65, crownY - direction * 5);
-      ctx.lineTo(x + pipeWidth * 0.88, crownY - direction * 10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.lineWidth = 2;
+      const hubX = x + pipeWidth * 0.5;
+      const leafY = crownY - direction * Math.min(7, crownHeight * 0.25);
+      const leaves = [
+        [hubX - pipeWidth * 0.42, crownY - direction * crownHeight * 0.55],
+        [hubX - pipeWidth * 0.24, crownY - direction * crownHeight * 0.82],
+        [hubX, crownY - direction * crownHeight],
+        [hubX + pipeWidth * 0.24, crownY - direction * crownHeight * 0.82],
+        [hubX + pipeWidth * 0.42, crownY - direction * crownHeight * 0.55]
+      ];
+      for (const leaf of leaves) {
+        ctx.beginPath();
+        ctx.moveTo(hubX, leafY);
+        ctx.quadraticCurveTo((hubX + leaf[0]) / 2, leaf[1] - direction * 3, leaf[0], leaf[1]);
+        ctx.quadraticCurveTo((hubX + leaf[0]) / 2, leaf[1] + direction * 3, hubX, leafY + direction * 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     palmRect(0, gapTop, true);
